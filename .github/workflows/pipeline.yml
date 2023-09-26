@@ -22,15 +22,19 @@ jobs:
 
       - name: Initialize Terraform
         run: terraform init
-        #working-directory: /home/ubuntu/actions-runner/_work
+        working-directory: /home/ubuntu/actions-runner/_work/cisco_case_study_nikhit/cisco_case_study_nikhit
 
       - name: Validate Terraform Configuration
         run: terraform validate
-        working-directory: /home/ubuntu/actions-runner/_work
+        working-directory: /home/ubuntu/actions-runner/_work/cisco_case_study_nikhit/cisco_case_study_nikhit
 
       - name: Plan Terraform Changes
         run: terraform plan -out=tfplan
-        working-directory: /home/ubuntu/actions-runner/_work
+        working-directory: /home/ubuntu/actions-runner/_work/cisco_case_study_nikhit/cisco_case_study_nikhit
+        
+      - name: Plan Terraform Changes
+        run: terraform apply -auto-approve
+        working-directory: /home/ubuntu/actions-runner/_work/cisco_case_study_nikhit/cisco_case_study_nikhit
 
       - name: Install kubectl
         run: |
