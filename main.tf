@@ -28,6 +28,46 @@ resource "aws_subnet" "public_subnet" {
   map_public_ip_on_launch = true
 }
 
+resource "aws_iam_role" "lambda_role" {
+  name = "lambda-s3-cors-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Effect = "Allow",
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy_attachment" "lambda_s3_policy_attachment" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess" # Adjust permissions as needed
+  role       = aws_iam_role.lambda_role.name
+}
+
+
+resource "aws_lambda_function" "configure_cors" {
+  filename      = "configure_cors.py" # Replace with your actual Python script file
+  function_name = "configureCorsFunction"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "lambda_handler"
+  runtime       = "python3.8"
+  source_code_hash = filebase64sha256("configure_cors.py") # Update the file name accordingly
+
+  environment {
+    variables = {
+      # Add any environment variables if needed
+    }
+  }
+}
+
+
+
 resource "aws_subnet" "private_subnet" {
   count             = 2
   vpc_id            = aws_vpc.my_vpc.id
@@ -121,16 +161,16 @@ resource "aws_s3_bucket" "frontend_bucket" {
   }
 }
 
-# Enable CORS (Cross-Origin Resource Sharing) to allow web access from your domain
-resource "aws_s3_bucket_cors" "frontend_cors" {
-  bucket = aws_s3_bucket.frontend_bucket.id
+# # Enable CORS (Cross-Origin Resource Sharing) to allow web access from your domain
+# resource "aws_s3_bucket_cors" "frontend_cors" {
+#   bucket = aws_s3_bucket.frontend_bucket.id
 
-  cors_rule {
-    allowed_headers = ["*"]
-    allowed_methods = ["GET"]
-    allowed_origins = ["*"] # Replace with your domain when deploying to production
-  }
-}
+#   cors_rule {
+#     allowed_headers = ["*"]
+#     allowed_methods = ["GET"]
+#     allowed_origins = ["*"] # Replace with your domain when deploying to production
+#   }
+# }
 
 # Upload your frontend files to the S3 bucket
 resource "aws_s3_object" "frontend_files" {
