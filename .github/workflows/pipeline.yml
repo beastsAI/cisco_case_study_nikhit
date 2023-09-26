@@ -24,6 +24,7 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.1.7 # Specify the desired Terraform version
+          working-directory: /home/ubuntu/actions-runner/_work/cisco_case_study_nikhit/cisco_case_study_nikhit
 
       - name: Initialize Terraform
         run: terraform init
