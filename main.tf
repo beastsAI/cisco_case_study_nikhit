@@ -1,29 +1,28 @@
 # Define the AWS provider configuration
 provider "aws" {
-  alias = "us-east-1"
-  region = "us-east-1"
+  region = "us-east-1" # Specify your desired AWS region
 }
 
 # Create a VPC
 resource "aws_vpc" "my_vpc" {
-  cidr_block = "10.0.0.0/16"
-  enable_dns_support = true
+  cidr_block          = "10.0.0.0/16"
+  enable_dns_support  = true
   enable_dns_hostnames = true
 }
 
 # Create public and private subnets
 resource "aws_subnet" "public_subnet" {
-  count = 2
-  vpc_id = aws_vpc.my_vpc.id
-  cidr_block = element(["10.0.1.0/24", "10.0.2.0/24"], count.index)
+  count             = 2
+  vpc_id            = aws_vpc.my_vpc.id
+  cidr_block        = element(["10.0.1.0/24", "10.0.2.0/24"], count.index)
   availability_zone = element(["us-east-1a", "us-east-1b"], count.index)
   map_public_ip_on_launch = true
 }
 
 resource "aws_subnet" "private_subnet" {
-  count = 2
-  vpc_id = aws_vpc.my_vpc.id
-  cidr_block = element(["10.0.3.0/24", "10.0.4.0/24"], count.index)
+  count             = 2
+  vpc_id            = aws_vpc.my_vpc.id
+  cidr_block        = element(["10.0.3.0/24", "10.0.4.0/24"], count.index)
   availability_zone = element(["us-east-1a", "us-east-1b"], count.index)
 }
 
@@ -56,10 +55,12 @@ module "eks" {
   source          = "terraform-aws-modules/eks/aws"
   cluster_name    = "my-eks-cluster"
   cluster_version = "1.21" # Specify your desired EKS version
-#   subnets         = aws_subnet.private_subnet[*].id
+  subnet_ids      = aws_subnet.private_subnet[*].id # Use this to specify the subnets
   vpc_id          = aws_vpc.my_vpc.id
-
-  # Add additional EKS module configuration options as needed
+  tags            = {
+    Terraform   = "true"
+    Environment = "dev"
+  }
 }
 
 # Create an Application Load Balancer (ALB)
@@ -69,14 +70,9 @@ resource "aws_lb" "my_alb" {
   load_balancer_type = "application"
   subnets            = aws_subnet.public_subnet[*].id
 
-  #enable_deletion_protection = false # Ensure this is handled appropriately for production
-
   enable_http2 = true
 
-  # Add security groups and listener configuration
   security_groups = [aws_security_group.eks_cluster_sg.id]
-
-  #enable_deletion_protection = false # Ensure this is handled appropriately for production
 }
 
 # Create ALB listeners and rules for frontend/backend routing
@@ -89,7 +85,6 @@ resource "aws_lb_listener" "frontend" {
     fixed_response {
       content_type = "text/plain"
       status_code  = "200"
-      content      = "Hello from the frontend!"
     }
   }
 }
@@ -99,11 +94,46 @@ resource "aws_lb_listener" "backend" {
   port              = 8080
   protocol          = "HTTP"
   default_action {
-    type = "fixed-response"
+    type             = "fixed-response"
     fixed_response {
       content_type = "text/plain"
       status_code  = "200"
-      content      = "Hello from the backend!"
     }
   }
 }
+
+# Create an S3 bucket for hosting the frontend application
+resource "aws_s3_bucket" "frontend_bucket" {
+  bucket = "my-frontend-bucket" # Replace with your preferred bucket name
+  acl    = "public-read"
+
+  website {
+    index_document = "index.html" # The main HTML file for your frontend
+  }
+}
+
+# Enable CORS (Cross-Origin Resource Sharing) to allow web access from your domain
+resource "aws_s3_bucket_cors" "frontend_cors" {
+  bucket = aws_s3_bucket.frontend_bucket.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET"]
+    allowed_origins = ["*"] # Replace with your domain when deploying to production
+  }
+}
+
+# Upload your frontend files to the S3 bucket
+resource "aws_s3_object" "frontend_files" {
+  for_each      = fileset("${path.module}/frontend", "**/*")
+  bucket   = aws_s3_bucket.frontend_bucket.id
+  source   = "${path.module}/frontend/${each.key}"
+  key      = each.key
+  content_type = "text/html"  # Update content types as needed for your files
+  }
+
+# Output the S3 bucket URL where the frontend is hosted
+output "frontend_bucket_url" {
+  value = aws_s3_bucket.frontend_bucket.website_endpoint
+}
+
