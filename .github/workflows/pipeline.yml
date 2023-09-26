@@ -13,6 +13,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      
+
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
@@ -20,15 +22,15 @@ jobs:
 
       - name: Initialize Terraform
         run: terraform init
-        working-directory: /home/ec2-user/actions-runner/_work
+        working-directory: /home/ubuntu/actions-runner/_work
 
       - name: Validate Terraform Configuration
         run: terraform validate
-        working-directory: /home/ec2-user/actions-runner/_work
+        working-directory: /home/ubuntu/actions-runner/_work
 
       - name: Plan Terraform Changes
         run: terraform plan -out=tfplan
-        working-directory: /home/ec2-user/actions-runner/_work
+        working-directory: /home/ubuntu/actions-runner/_work
 
       - name: Install kubectl
         run: |
