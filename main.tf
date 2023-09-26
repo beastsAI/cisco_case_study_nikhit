@@ -56,7 +56,7 @@ module "eks" {
   source          = "terraform-aws-modules/eks/aws"
   cluster_name    = "my-eks-cluster"
   cluster_version = "1.21" # Specify your desired EKS version
-  subnets         = aws_subnet.private_subnet[*].id
+#   subnets         = aws_subnet.private_subnet[*].id
   vpc_id          = aws_vpc.my_vpc.id
 
   # Add additional EKS module configuration options as needed
