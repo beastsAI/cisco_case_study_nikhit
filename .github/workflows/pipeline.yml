@@ -22,7 +22,7 @@ jobs:
 
       - name: Initialize Terraform
         run: terraform init
-        working-directory: /home/ubuntu/actions-runner/_work
+        #working-directory: /home/ubuntu/actions-runner/_work
 
       - name: Validate Terraform Configuration
         run: terraform validate
