@@ -1,0 +1,49 @@
+name: Deploy Infrastructure and Microservices
+
+on:
+  push:
+    branches:
+      - main # Trigger the workflow when code is pushed to the main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+
+
+      - name: Initialize Terraform
+        run: terraform init
+
+      - name: Provision Infrastructure
+        run: terraform apply -auto-approve
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+
+      - name: Configure Helm
+        run: |
+          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+          chmod +x get_helm.sh
+          ./get_helm.sh
+
+      - name: Add Helm Repository
+        run: helm repo add myrepo <REPO_URL>
+        
+      - name: Update Helm Repositories
+        run: helm repo update
+
+      - name: Deploy Microservices with Helm
+        run: helm install myapp myrepo/mychart
+
+      - name: Cleanup
+        run: terraform destroy -auto-approve
+        # Be cautious with this step as it destroys your infrastructure; use only for testing or if needed.
