@@ -24,7 +24,6 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.1.7 # Specify the desired Terraform version
-          working-directory: /home/ubuntu/actions-runner/_work/cisco_case_study_nikhit/cisco_case_study_nikhit
 
       - name: Initialize Terraform
         run: terraform init
@@ -37,8 +36,8 @@ jobs:
       - name: Plan Terraform Changes
         run: terraform plan -out=tfplan
         working-directory: /home/ubuntu/actions-runner/_work/cisco_case_study_nikhit/cisco_case_study_nikhit
-        
-      - name: Plan Terraform Changes
+
+      - name: Apply Terraform Changes
         run: terraform apply -auto-approve
         working-directory: /home/ubuntu/actions-runner/_work/cisco_case_study_nikhit/cisco_case_study_nikhit
 
@@ -57,4 +56,3 @@ jobs:
       - name: Deploy Microservices with Helm
         run: |
           helm install myapp /home/ec2-user/actions-runner/_work
-
