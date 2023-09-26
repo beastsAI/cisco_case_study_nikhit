@@ -46,8 +46,9 @@ resource "aws_iam_role" "lambda_role" {
 }
 
 resource "aws_iam_policy_attachment" "lambda_s3_policy_attachment" {
+  name = "cors-iam-role"  
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess" # Adjust permissions as needed
-  role       = aws_iam_role.lambda_role.name
+  roles       = aws_iam_role.lambda_role.name
 }
 
 
