@@ -9,6 +9,7 @@ resource "aws_internet_gateway" "example" {
   vpc_id = aws_vpc.my_vpc.id
 }
 
+
 # Create public and private subnets
 resource "aws_subnet" "public_subnet" {
   count             = 2
