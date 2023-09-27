@@ -108,16 +108,20 @@ module "s3_bucket" {
   source = "terraform-aws-modules/s3-bucket/aws"
 
   bucket = "my-frontend-bucket"
-  cors_rule = {
-    allowed_headers = ["*"]
-    allowed_methods = ["GET"]
-    allowed_origins = ["*"]
-  }
-
-  control_object_ownership = true
 
   versioning = {
     enabled = true
+  }
+}
+
+resource "aws_s3_bucket_cors_configuration" "frontend" {
+  bucket = module.s3_bucket.s3_bucket_id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "POST", "GET"]
+    allowed_origins = ["*"]
+    max_age_seconds = 3000
   }
 }
 
