@@ -119,17 +119,12 @@ module "s3_bucket" {
   versioning = {
     enabled = true
   }
-  website {
-    index_document = "index.html" # The main HTML file for your frontend
+}
+
+resource "aws_s3_bucket_website_configuration" "example" {
+  bucket = module.s3_bucket.s3_bucket_id
+
+  index_document {
+    suffix = "index.html"
   }
 }
-
-# Upload your frontend files to the S3 bucket
-resource "aws_s3_object" "frontend_files" {
-  for_each     = fileset("${path.module}/frontend", "**/*")
-  bucket       = aws_s3_bucket.frontend_bucket.id
-  source       = "${path.module}/frontend/${each.key}"
-  key          = each.key
-  content_type = "text/html" # Update content types as needed for your files
-}
-
