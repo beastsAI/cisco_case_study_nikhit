@@ -12,10 +12,10 @@ resource "aws_internet_gateway" "example" {
 
 # Create public and private subnets
 resource "aws_subnet" "public_subnet" {
-  count             = 2
-  vpc_id            = aws_vpc.my_vpc.id
-  cidr_block        = element(var.public_subnet_cidr_blocks, count.index)
-  availability_zone = element(["us-east-1a", "us-east-1b"], count.index)
+  count                   = 2
+  vpc_id                  = aws_vpc.my_vpc.id
+  cidr_block              = element(var.public_subnet_cidr_blocks, count.index)
+  availability_zone       = element(["us-east-1a", "us-east-1b"], count.index)
   map_public_ip_on_launch = true
 }
 
@@ -104,10 +104,21 @@ resource "aws_lb_listener" "backend" {
 }
 
 # Create an S3 bucket for hosting the frontend application
-resource "aws_s3_bucket" "frontend_bucket" {
-  bucket = "my-frontend-bucket" # Replace with your preferred bucket name
-  acl    = "public-read"
+module "s3_bucket" {
+  source = "terraform-aws-modules/s3-bucket/aws"
 
+  bucket = "my-frontend-bucket"
+  cors_rule = {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET"]
+    allowed_origins = ["*"]
+  }
+
+  control_object_ownership = true
+
+  versioning = {
+    enabled = true
+  }
   website {
     index_document = "index.html" # The main HTML file for your frontend
   }
